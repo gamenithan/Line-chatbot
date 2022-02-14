@@ -10,10 +10,10 @@ from flask import make_response
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
-cerds = ServiceAccountCredentials.from_json_keyfile_name("cerds.json", scope)
-client = gspread.authorize(cerds)
-sheet = client.open("chatbot").worksheet('sheet1') # เป็นการเปิดไปยังหน้าชีตนั้นๆ
+# scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+# cerds = ServiceAccountCredentials.from_json_keyfile_name("cerds.json", scope)
+# client = gspread.authorize(cerds)
+# sheet = client.open("chatbot").worksheet('sheet1') # เป็นการเปิดไปยังหน้าชีตนั้นๆ
 #-------------------------------------
 
 #----เชื่อมต่อfirebase----
@@ -21,8 +21,8 @@ from random import randint
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-cred = credentials.Certificate("chatbot-garem-firebase-adminsdk-bufga-83c907a691.json")
-firebase_admin.initialize_app(cred)
+# cred = credentials.Certificate("chatbot-garem-firebase-adminsdk-bufga-83c907a691.json")
+# firebase_admin.initialize_app(cred)
 #-------------------------------------
 
 # Flask
@@ -52,8 +52,8 @@ def generating_answer(question_from_dailogflow_dict):
     intent_group_question_str = question_from_dailogflow_dict["queryResult"]["intent"]["displayName"] 
 
     #ลูปตัวเลือกของฟังก์ชั่นสำหรับตอบคำถามกลับ
-    if intent_group_question_str == 'หิวจัง':
-        answer_str = menu_recormentation()
+    if intent_group_question_str == 'คำนวนข้อมูลสินค้า':
+        answer_str = menu_recormentation(question_from_dailogflow_dict)
     elif intent_group_question_str == 'คำนวนน้ำหนัก': 
         answer_str = BMI(question_from_dailogflow_dict)
     else: answer_str = "ผมไม่เข้าใจ คุณต้องการอะไร"
@@ -66,14 +66,15 @@ def generating_answer(question_from_dailogflow_dict):
     
     return answer_from_bot
 
-def menu_recormentation(): #ฟังก์ชั่นสำหรับเมนูแนะนำ
-    database_ref = firestore.client().document('Food/Menu_List')
-    database_dict = database_ref.get().to_dict()
-    database_list = list(database_dict.values())
-    ran_menu = randint(0, len(database_list)-1)
-    menu_name = database_list[ran_menu]
+def menu_recormentation(respond_dict): #ฟังก์ชั่นสำหรับเมนูแนะนำ
+    fur = str(respond_dict["queryResult"]["outputContexts"][1]["parameters"]["Fur.original"])
+    # database_ref = firestore.client().document('Food/Menu_List')
+    # database_dict = database_ref.get().to_dict()
+    # database_list = list(database_dict.values())
+    # ran_menu = randint(0, len(database_list)-1)
+    # menu_name = database_list[ran_menu]
     #-------------------------------------
-    answer_function = menu_name + ' สิ น่ากินนะ'
+    answer_function = fur + 'มีบลาๆ'
     return answer_function
 
 def BMI(respond_dict): #ฟังก์ชั่นสำหรับคำนวนน้ำหนัก
