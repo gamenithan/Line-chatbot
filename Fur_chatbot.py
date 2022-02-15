@@ -2,6 +2,7 @@
 #Import Library
 import json
 import os
+from re import I
 from flask import Flask
 from flask import request
 from flask import make_response
@@ -10,10 +11,10 @@ from flask import make_response
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
-# cerds = ServiceAccountCredentials.from_json_keyfile_name("cerds.json", scope)
-# client = gspread.authorize(cerds)
-# sheet = client.open("chatbot").worksheet('sheet1') # เป็นการเปิดไปยังหน้าชีตนั้นๆ
+scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+cerds = ServiceAccountCredentials.from_json_keyfile_name("cerds.json", scope)
+client = gspread.authorize(cerds)
+sheet = client.open("Chatbot-Fur").worksheet('sheet1') # เป็นการเปิดไปยังหน้าชีตนั้นๆ
 #-------------------------------------
 
 #----เชื่อมต่อfirebase----
@@ -21,8 +22,8 @@ from random import randint
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-# cred = credentials.Certificate("chatbot-garem-firebase-adminsdk-bufga-83c907a691.json")
-# firebase_admin.initialize_app(cred)
+cred = credentials.Certificate("chatbot-fur-firebase-adminsdk-6657a-e04847c52a.json")
+firebase_admin.initialize_app(cred)
 #-------------------------------------
 
 # Flask
@@ -68,13 +69,24 @@ def generating_answer(question_from_dailogflow_dict):
 
 def menu_recormentation(respond_dict): #ฟังก์ชั่นสำหรับเมนูแนะนำ
     fur = str(respond_dict["queryResult"]["outputContexts"][1]["parameters"]["Fur.original"])
-    # database_ref = firestore.client().document('Food/Menu_List')
-    # database_dict = database_ref.get().to_dict()
-    # database_list = list(database_dict.values())
+    database_ref = firestore.client().document('Furniture/Item_list')
+    database_dict = database_ref.get().to_dict()
+    database_list = list(database_dict.values())
     # ran_menu = randint(0, len(database_list)-1)
     # menu_name = database_list[ran_menu]
+    sheet.insert_row([fur], 2)
+    for i in database_list:
+        if str(i) == str(fur):
+            Item_name = i + "มีข้อมูลบลาๆ"
+            break
+        else:
+            Item_name = "ไม่มีข้อมูล Furniture นี้อยู่"
+    # if database_dict[0] == fur:
+    #     Item_name = database_list[0]
+    # else:
+    #     Item_name = 'มีบางอย่างผิดพลาด'
     #-------------------------------------
-    answer_function = fur + 'มีบลาๆ'
+    answer_function = Item_name
     return answer_function
 
 def BMI(respond_dict): #ฟังก์ชั่นสำหรับคำนวนน้ำหนัก
@@ -83,7 +95,7 @@ def BMI(respond_dict): #ฟังก์ชั่นสำหรับคำน�
     weight1 = float(respond_dict["queryResult"]["outputContexts"][1]["parameters"]["Weight.original"])
     height1 = float(respond_dict["queryResult"]["outputContexts"][1]["parameters"]["Height.original"])
     #เพิ่มเติม
-    sheet.insert_row([weight1, height1], 2)
+    # sheet.insert_row([weight1, height1], 2)
     
     #คำนวนน้ำหนัก
     BMI = weight1/(height1/100)**2
